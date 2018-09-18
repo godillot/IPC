@@ -21,81 +21,81 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+
 /*
  * 
  */
 int main(int argc, char** argv) {
 
     int socketServeur;
-  struct sockaddr_in infosClient;
+    struct sockaddr_in infosClient;
     struct sockaddr_in infosServeur;
- 
+
     int tailleClient;
     int entierRecu;
     int retourListen;
     int retourRead;
-     int retourWrite;
+    int retourWrite;
     int retourBind;
     int retourAccept;
-    
+    int retour = 1;
+
+
     //CREATION DE LA SOCKET TCP
-socketServeur = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-if(socketServeur==-1){
-    printf("pb socket : %s \n", strerror(errno));
-    exit(errno);
-}
+    socketServeur = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    
+    if (socketServeur == -1) {
+        printf("pb socket : %s \n", strerror(errno));
+        exit(errno);
+    }
 
     //INIT DES INFOMATIONS SERVEURS
-/**/
-infosServeur.sin_addr.s_addr=inet_addr(INADDR_ANY);
-infosServeur.sin_family=AF_INET;
-infosServeur.sin_port=htons(5555);
+    /**/
+    infosServeur.sin_addr.s_addr = htonl(INADDR_ANY);
+    infosServeur.sin_family = AF_INET;
+    infosServeur.sin_port = htons(5555);
 
-tailleClient = sizeof(infosClient);
+    tailleClient = sizeof (infosClient);
 
- //ENVOYER L'ENTIER AU SERVEUR
-retourBind = bind( socketServeur, (struct sockaddr *)&infosServeur, sizeof(infosServeur));
+    //ENVOYER L'ENTIER AU SERVEUR
+    retourBind = bind(socketServeur, (struct sockaddr *) &infosServeur, sizeof (infosServeur));
 
-if (retourBind == -1)
-{
-printf("pb bind : %s\n", strerror(errno));
-exit(errno);
-}
+    if (retourBind == -1) {
+        printf("pb bind : %s\n", strerror(errno));
+        exit(errno);
+    }
+/////////////////////////
+    
+        retourListen = listen(socketServeur, 10);
 
+        if (retourListen == -1) {
+            printf("pb listen : %s\n", strerror(errno));
+            exit(errno);
+        }
+////////////////////////
+        retourAccept = accept(socketServeur, (struct sockaddr *) &infosClient, &tailleClient);
 
-retourListen = listen(socketServeur, 10);
+        if (retourAccept == -1) {
+            printf("pb accept : %s\n", strerror(errno));
+            exit(errno);
+        }
+        
+////////////////////////        
+        retourRead = read(retourAccept, &entierRecu, sizeof (entierRecu));
 
-if (retourListen == -1)
-{
-printf("pb listen : %s\n", strerror(errno));
-exit(errno);
-}
+        if (retourRead == -1) {
+            printf("pb read : %s\n", strerror(errno));
+            exit(errno);
+        }
+ printf("message client %s : %i\n", inet_ntoa(infosClient.sin_addr), entierRecu);
+////////////////////////
+        retourWrite = write(retourAccept, &entierRecu, sizeof (entierRecu));
 
-retourAccept = accept(socketServeur, (struct sockaddr *) &infosClient,&tailleClient);
+        if (retourWrite == -1) {
+            printf("pb write : %s\n", strerror(errno));
+            exit(errno);
+        }
+        close(socketServeur);
 
-if (retourAccept == -1)
-{
-printf("pb accept : %s\n", strerror(errno));
-exit(errno);
-}
-retourRead = read(retourAccept, &entierRecu, sizeof(entierRecu));
-
-if (retourRead == -1)
-{
-printf("pb read : %s\n", strerror(errno));
-exit(errno);
-}
-
-
-retourWrite = write(retourAccept, &entierRecu, sizeof(entierRecu));
-
-if (retourWrite == -1)
-{
-printf("pb write : %s\n", strerror(errno));
-exit(errno);
-}
-close(socketServeur);
-
-    return (EXIT_SUCCESS);
-}
-
+          return (EXIT_SUCCESS);
+    }
